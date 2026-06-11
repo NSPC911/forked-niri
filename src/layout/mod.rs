@@ -2337,7 +2337,7 @@ impl<W: LayoutElement> Layout<W> {
         &self,
         output: &Output,
         pos_within_output: Point<f64, Logical>,
-        center_area_percentage: Option<CenterAreaPercentage>,
+        center_area_percentage: CenterAreaPercentage,
     ) -> Option<ResizeEdge> {
         let mon = self.monitor_for_output(output)?;
         mon.resize_edges_under(pos_within_output, center_area_percentage)

@@ -1772,7 +1772,7 @@ impl<W: LayoutElement> Workspace<W> {
     pub fn resize_edges_under(
         &self,
         pos: Point<f64, Logical>,
-        center_area_percentage: Option<CenterAreaPercentage>,
+        center_area_percentage: CenterAreaPercentage,
     ) -> Option<ResizeEdge> {
         self.tiles_with_render_positions()
             .find_map(|(tile, tile_pos, visible)| {
@@ -1785,12 +1785,9 @@ impl<W: LayoutElement> Workspace<W> {
                 let pos_within_tile = pos - tile_pos;
 
                 if tile.hit(pos_within_tile).is_some() {
-                    let w = center_area_percentage
-                        .and_then(|c| c.width)
-                        .map(|p| p.0)
-                        .unwrap_or(1. / 3.);
+                    let w = center_area_percentage.width.map(|p| p.0).unwrap_or(1. / 3.);
                     let h = center_area_percentage
-                        .and_then(|c| c.height)
+                        .height
                         .map(|p| p.0)
                         .unwrap_or(1. / 3.);
 
@@ -1799,12 +1796,12 @@ impl<W: LayoutElement> Workspace<W> {
                     let mut edges = ResizeEdge::empty();
                     if pos_within_tile.x < ((size.w * (1. - w)) / 2.) {
                         edges |= ResizeEdge::LEFT;
-                    } else if pos_within_tile.x > ((size.w * (1. + w)) / 2.) {
+                    } else if ((size.w * (1. + w)) / 2.) < pos_within_tile.x {
                         edges |= ResizeEdge::RIGHT;
                     }
                     if pos_within_tile.y < ((size.h * (1. - h)) / 2.) {
                         edges |= ResizeEdge::TOP;
-                    } else if pos_within_tile.y > ((size.h * (1. + h)) / 2.) {
+                    } else if ((size.h * (1. + h)) / 2.) < pos_within_tile.y {
                         edges |= ResizeEdge::BOTTOM;
                     }
                     return Some(edges);

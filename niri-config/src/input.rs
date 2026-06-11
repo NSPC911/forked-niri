@@ -466,7 +466,7 @@ impl FromStr for CenterSidePercent {
     }
 }
 
-#[derive(knuffel::Decode, Debug, Clone, Copy, PartialEq)]
+#[derive(knuffel::Decode, Debug, Default, Clone, Copy, PartialEq)]
 pub struct CenterAreaPercentage {
     // using Option means a person can just have `center-percentage;`
     // in their kdl file, which does nothing, so :( i guess

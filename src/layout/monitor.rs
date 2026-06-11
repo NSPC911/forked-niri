@@ -1579,7 +1579,7 @@ impl<W: LayoutElement> Monitor<W> {
     pub fn resize_edges_under(
         &self,
         pos_within_output: Point<f64, Logical>,
-        center_area_percentage: Option<CenterAreaPercentage>,
+        center_area_percentage: CenterAreaPercentage,
     ) -> Option<ResizeEdge> {
         if self.overview_progress.is_some() {
             return None;
