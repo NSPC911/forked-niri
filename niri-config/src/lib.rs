@@ -40,6 +40,7 @@ pub mod layout;
 pub mod misc;
 pub mod output;
 pub mod recent_windows;
+pub mod touch_binds;
 pub mod utils;
 pub mod window_rule;
 pub mod workspace;
@@ -648,6 +649,32 @@ mod tests {
         assert_eq!(config.input.keyboard.repeat_rate, 25);
     }
 
+    #[test]
+    fn touchscreen_flick_defaults() {
+        let config = Config::parse_mem("").unwrap();
+        assert!(config.input.touchscreen.flick_to_monitor());
+        assert_eq!(config.input.touchscreen.flick_velocity_threshold(), 800.0);
+    }
+
+    #[test]
+    fn touchscreen_flick_overrides() {
+        let config = Config::parse_mem(
+            r##"
+            input {
+                touchscreen {
+                    gestures {
+                        flick-to-monitor false
+                        flick-velocity-threshold 1200.0
+                    }
+                }
+            }
+            "##,
+        )
+        .unwrap();
+        assert!(!config.input.touchscreen.flick_to_monitor());
+        assert_eq!(config.input.touchscreen.flick_velocity_threshold(), 1200.0);
+    }
+
     #[track_caller]
     fn do_parse(text: &str) -> Config {
         Config::parse_mem(text)
@@ -749,8 +776,9 @@ mod tests {
                                        4.0 5.0 6.0
                 }
 
-                touch {
+                touchscreen {
                     map-to-output "eDP-1"
+                    focus-on-touch "touch-up"
                 }
 
                 disable-power-key-handling
@@ -1055,6 +1083,7 @@ mod tests {
                             vertical: None,
                         },
                     ),
+                    gestures: None,
                 },
                 mouse: Mouse {
                     off: false,
@@ -1143,12 +1172,17 @@ mod tests {
                     map_to_focused_window: true,
                     left_handed: false,
                 },
-                touch: Touch {
+                touchscreen: Touchscreen {
                     off: false,
+                    natural_scroll: false,
                     calibration_matrix: None,
                     map_to_output: Some(
                         "eDP-1",
                     ),
+                    focus_on_touch: Some(
+                        TouchUp,
+                    ),
+                    gestures: None,
                 },
                 disable_power_key_handling: true,
                 warp_mouse_to_focus: Some(
@@ -1927,6 +1961,7 @@ mod tests {
                             saturation: None,
                         },
                     },
+                    touchscreen_gesture_passthrough: None,
                 },
             ],
             layer_rules: [
@@ -2001,6 +2036,8 @@ mod tests {
                                 "Inhibit",
                             ),
                         ),
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2017,6 +2054,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: false,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2037,6 +2076,8 @@ mod tests {
                         allow_when_locked: true,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2055,6 +2096,8 @@ mod tests {
                         hotkey_overlay_title: Some(
                             None,
                         ),
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2071,6 +2114,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2089,6 +2134,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2105,6 +2152,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2123,6 +2172,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2141,6 +2192,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2157,6 +2210,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2177,6 +2232,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2197,6 +2254,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2215,6 +2274,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: false,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2231,6 +2292,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2249,6 +2312,8 @@ mod tests {
                         allow_when_locked: true,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                 ],
             ),
@@ -2374,6 +2439,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2396,6 +2463,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                     Bind {
                         key: Key {
@@ -2420,6 +2489,8 @@ mod tests {
                         allow_when_locked: false,
                         allow_inhibiting: true,
                         hotkey_overlay_title: None,
+                        sensitivity: None,
+                        natural_scroll: false,
                     },
                 ],
             },
