@@ -733,7 +733,7 @@ impl<W: LayoutElement> Workspace<W> {
             self.enter_output_for_window(tile.window());
         }
 
-        self.scrolling.add_column(None, column, activate, anim);
+        self.scrolling.add_column(None, column, activate, anim, false);
 
         if activate {
             self.floating_is_active = FloatingActive::No;
@@ -1395,21 +1395,21 @@ impl<W: LayoutElement> Workspace<W> {
             return;
         };
 
-        let (_, render_pos, _) = self
+        let (tile, render_pos, _) = self
             .tiles_with_render_positions()
             .find(|(tile, _, _)| *tile.window().id() == id)
             .unwrap();
 
         if self.floating.has_window(&id) {
+            let center = render_pos + tile.tile_size().to_point().downscale(2.);
             let removed = self.floating.remove_tile(&id);
-            // FIXME: compute closest pos?
-            self.scrolling.add_tile(
-                None,
+            let col_idx = self.scrolling.insert_column_position(center.x);
+            self.scrolling.add_tile_left_anchored(
+                col_idx,
                 removed.tile,
                 target_is_active,
                 removed.width,
                 removed.is_full_width,
-                None,
             );
             if target_is_active {
                 self.floating_is_active = FloatingActive::No;
