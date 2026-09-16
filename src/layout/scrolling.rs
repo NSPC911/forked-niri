@@ -833,6 +833,23 @@ impl<W: LayoutElement> ScrollingSpace<W> {
         }
     }
 
+    pub(super) fn insert_column_position(&self, pos_x: f64) -> usize {
+        if self.columns.is_empty() {
+            return 0;
+        }
+
+        let x = pos_x + self.view_pos() + self.options.layout.gaps / 2.;
+        if x < 0. {
+            return 0;
+        }
+
+        self.column_xs(self.data.iter().copied())
+            .enumerate()
+            .min_by_key(|(_, col_x)| NotNan::new((col_x - x).abs()).unwrap())
+            .unwrap()
+            .0
+    }
+
     pub(super) fn insert_position(&self, pos: Point<f64, Logical>) -> InsertPosition {
         if self.columns.is_empty() {
             return InsertPosition::NewColumn(0);
@@ -850,11 +867,8 @@ impl<W: LayoutElement> ScrollingSpace<W> {
         }
 
         // Find the closest gap between columns.
-        let (closest_col_idx, col_x) = self
-            .column_xs(self.data.iter().copied())
-            .enumerate()
-            .min_by_key(|(_, col_x)| NotNan::new((col_x - x).abs()).unwrap())
-            .unwrap();
+        let closest_col_idx = self.insert_column_position(pos.x);
+        let col_x = self.column_x(self.insert_column_position(pos.x));
 
         // Find the column containing the position.
         let (col_idx, _) = self
@@ -919,7 +933,34 @@ impl<W: LayoutElement> ScrollingSpace<W> {
             is_full_width,
         );
 
-        self.add_column(col_idx, column, activate, anim);
+        self.add_column(col_idx, column, activate, anim, false);
+    }
+
+    pub(super) fn add_tile_left_anchored(
+        &mut self,
+        col_idx: usize,
+        tile: Tile<W>,
+        activate: bool,
+        width: ColumnWidth,
+        is_full_width: bool,
+    ) {
+        let column = Column::new_with_tile(
+            tile,
+            self.view_size,
+            self.working_area,
+            self.parent_area,
+            self.scale,
+            width,
+            is_full_width,
+        );
+
+        self.add_column(
+            Some(col_idx),
+            column,
+            activate,
+            None,
+            true,
+        );
     }
 
     pub fn add_tile_to_column(
@@ -1002,6 +1043,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
         mut column: Column<W>,
         activate: bool,
         anim_config: Option<niri_config::Animation>,
+        anchor_left: bool,
     ) {
         let was_empty = self.columns.is_empty();
 
@@ -1020,17 +1062,22 @@ impl<W: LayoutElement> ScrollingSpace<W> {
             self.scale,
             self.options.clone(),
         );
+        let active_was_right = !was_empty && idx <= self.active_column_idx;
+
         self.data.insert(idx, ColumnData::new(&column));
         self.columns.insert(idx, column);
 
-        if !was_empty && idx <= self.active_column_idx {
+        if active_was_right {
             self.active_column_idx += 1;
         }
 
         // Animate movement of other columns.
         let offset = self.column_x(idx + 1) - self.column_x(idx);
+        if anchor_left && active_was_right {
+            self.view_offset.offset(-offset);
+        }
         let config = anim_config.unwrap_or(self.options.animations.window_movement.0);
-        if self.active_column_idx <= idx {
+        if anchor_left || self.active_column_idx <= idx {
             for col in &mut self.columns[idx + 1..] {
                 col.animate_move_x_from_with_config(-offset, config);
             }
@@ -1049,12 +1096,18 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                     ViewOffset::Static(self.compute_new_view_offset_for_column(None, idx, None));
             }
 
+            if anchor_left {
+                self.view_offset.stop_anim_and_gesture();
+            }
             let prev_offset = (!was_empty && idx == self.active_column_idx + 1)
                 .then(|| self.view_offset.stationary());
 
             let anim_config =
                 anim_config.unwrap_or(self.options.animations.horizontal_view_movement.0);
             self.activate_column_with_anim_config(idx, anim_config);
+            if anchor_left {
+                self.view_offset.stop_anim_and_gesture();
+            }
             self.activate_prev_column_on_removal = prev_offset;
         }
     }
