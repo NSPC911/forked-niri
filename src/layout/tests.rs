@@ -3476,6 +3476,80 @@ fn move_column_to_workspace_unfocused_with_multiple_monitors() {
 }
 
 #[test]
+fn floating_window_insertion_keeps_left_side_fixed() {
+    let mut layout = check_ops([
+        Op::AddOutput(1),
+        Op::AddWindow {
+            params: TestWindowParams::new(1),
+        },
+        Op::AddWindow {
+            params: TestWindowParams::new(2),
+        },
+        Op::AddWindow {
+            params: TestWindowParams {
+                is_floating: true,
+                ..TestWindowParams::new(3)
+            },
+        },
+        Op::CompleteAnimations,
+    ]);
+
+    let ws = layout.active_workspace().unwrap();
+    let (tile, pos, _) = ws
+        .tiles_with_render_positions()
+        .find(|(tile, _, _)| tile.window().id() == &2)
+        .unwrap();
+    let target_center_x = pos.x + tile.tile_size().w * 0.2;
+    let left_x = ws
+        .tiles_with_render_positions()
+        .find(|(tile, _, _)| tile.window().id() == &1)
+        .unwrap()
+        .1
+        .x;
+    let floating_width = ws
+        .tiles()
+        .find(|tile| tile.window().id() == &3)
+        .unwrap()
+        .tile_size()
+        .w;
+    let working_area_x = ws.floating().working_area().loc.x;
+
+    check_ops_on_layout(
+        &mut layout,
+        [
+            Op::MoveFloatingWindow {
+                id: Some(3),
+                x: PositionChange::SetFixed(target_center_x - floating_width / 2. - working_area_x),
+                y: PositionChange::SetFixed(0.),
+                animate: false,
+            },
+            Op::ToggleWindowFloating { id: Some(3) },
+            Op::CompleteAnimations,
+            Op::ToggleWindowFloating { id: Some(3) },
+            Op::CompleteAnimations,
+            Op::ToggleWindowFloating { id: Some(3) },
+            Op::CompleteAnimations,
+        ],
+    );
+
+    let ws = layout.active_workspace().unwrap();
+    let ids: Vec<_> = ws
+        .scrolling()
+        .columns()
+        .flat_map(|column| column.tiles().map(|(tile, _)| *tile.window().id()))
+        .collect();
+    let new_left_x = ws
+        .tiles_with_render_positions()
+        .find(|(tile, _, _)| tile.window().id() == &1)
+        .unwrap()
+        .1
+        .x;
+
+    assert_eq!(ids, [1, 3, 2]);
+    assert_eq!(new_left_x, left_x);
+}
+
+#[test]
 fn move_column_to_workspace_down_focus_false_on_floating_window() {
     let ops = [
         Op::AddOutput(1),
