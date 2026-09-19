@@ -5616,6 +5616,8 @@ mod tests {
             allow_when_locked: false,
             allow_inhibiting: false,
             hotkey_overlay_title: None,
+            sensitivity: None,
+            natural_scroll: false,
         };
         let down = Keycode::from(Keysym::Down.raw() + 8);
         let right = Keycode::from(Keysym::Right.raw() + 8);
