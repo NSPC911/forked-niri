@@ -346,7 +346,7 @@ fn default_config_path() -> Option<PathBuf> {
     };
 
     let mut path = dirs.config_dir().to_owned();
-    path.push("config.kdl");
+    path.push("fork.kdl");
     Some(path)
 }
 
