@@ -45,7 +45,7 @@ pub mod utils;
 pub mod window_rule;
 pub mod workspace;
 
-pub use crate::animations::{Animation, Animations};
+pub use crate::animations::{Animation, Animations, ColumnTabSwitchAnim, ColumnTabSwitchDirection};
 pub use crate::appearance::*;
 pub use crate::binds::*;
 pub use crate::debug::Debug;
@@ -906,6 +906,10 @@ mod tests {
                     curve "cubic-bezier" 0.05 0.7 0.1 1
                 }
 
+                column-tab-switch {
+                    direction "vertical"
+                }
+
                 recent-windows-close {
                     off
                 }
@@ -1633,6 +1637,18 @@ mod tests {
                         ),
                     },
                 ),
+                column_tab_switch: ColumnTabSwitchAnim {
+                    anim: Animation {
+                        off: false,
+                        kind: Easing(
+                            EasingParams {
+                                duration_ms: 150,
+                                curve: EaseOutExpo,
+                            },
+                        ),
+                    },
+                    direction: Vertical,
+                },
                 window_resize: WindowResizeAnim {
                     anim: Animation {
                         off: false,
