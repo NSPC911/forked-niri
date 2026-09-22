@@ -470,19 +470,7 @@ impl State {
                 let modifiers = modifiers_from_state(*mods);
 
                 // Existing repeats no longer match when the modifier state changes.
-                if matches!(
-                    modified,
-                    Keysym::Shift_L
-                        | Keysym::Shift_R
-                        | Keysym::Control_L
-                        | Keysym::Control_R
-                        | Keysym::Alt_L
-                        | Keysym::Alt_R
-                        | Keysym::Super_L
-                        | Keysym::Super_R
-                        | Keysym::ISO_Level3_Shift
-                        | Keysym::ISO_Level5_Shift
-                ) {
+                if modified.is_modifier_key() {
                     for (_, token) in this.niri.bind_repeat_timers.drain() {
                         this.niri.event_loop.remove(token);
                     }
