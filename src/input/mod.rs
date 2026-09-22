@@ -420,12 +420,6 @@ impl State {
         let time = Event::time(&event);
         let pressed = event.state() == KeyState::Pressed;
 
-        if !pressed {
-            if let Some(token) = self.niri.bind_repeat_timers.remove(&event.key_code()) {
-                self.niri.event_loop.remove(token);
-            }
-        }
-
         if pressed {
             self.hide_cursor_if_needed();
         }
@@ -469,12 +463,7 @@ impl State {
                 let raw = keysym.raw_latin_sym_or_raw_current_sym();
                 let modifiers = modifiers_from_state(*mods);
 
-                // Existing repeats no longer match when the modifier state changes.
-                if modified.is_modifier_key() {
-                    for (_, token) in this.niri.bind_repeat_timers.drain() {
-                        this.niri.event_loop.remove(token);
-                    }
-                }
+                this.update_key_repeats(key_code, pressed, modified);
 
                 // After updating XKB state from accessibility-grabbed keys, return right away and
                 // don't handle them.
@@ -604,7 +593,7 @@ impl State {
         self.start_key_repeat(event.key_code(), bind);
     }
 
-    fn start_key_repeat(&mut self, key_code: Keycode, bind: Bind) {
+    pub(crate) fn start_key_repeat(&mut self, key_code: Keycode, bind: Bind) {
         if !bind.repeat {
             return;
         }
@@ -635,6 +624,18 @@ impl State {
             .unwrap();
 
         self.niri.bind_repeat_timers.insert(key_code, token);
+    }
+
+    pub(crate) fn update_key_repeats(&mut self, key_code: Keycode, pressed: bool, keysym: Keysym) {
+        if keysym.is_modifier_key() {
+            for (_, token) in self.niri.bind_repeat_timers.drain() {
+                self.niri.event_loop.remove(token);
+            }
+        } else if !pressed {
+            if let Some(token) = self.niri.bind_repeat_timers.remove(&key_code) {
+                self.niri.event_loop.remove(token);
+            }
+        }
     }
 
     fn hide_cursor_if_needed(&mut self) {
@@ -5314,33 +5315,6 @@ mod tests {
 
     use super::*;
     use crate::animation::Clock;
-    use crate::tests::Fixture;
-
-    #[test]
-    fn bind_repeats_are_tracked_per_key() {
-        let mut fixture = Fixture::new();
-        let state = fixture.niri_state();
-        let bind = |keysym| Bind {
-            key: Key {
-                trigger: Trigger::Keysym(keysym),
-                modifiers: Modifiers::COMPOSITOR | Modifiers::SHIFT,
-            },
-            action: Action::MoveWindowDown,
-            repeat: true,
-            cooldown: None,
-            allow_when_locked: false,
-            allow_inhibiting: false,
-            hotkey_overlay_title: None,
-        };
-        let down = Keycode::from(Keysym::Down.raw() + 8);
-        let right = Keycode::from(Keysym::Right.raw() + 8);
-
-        state.start_key_repeat(down, bind(Keysym::Down));
-        state.start_key_repeat(right, bind(Keysym::Right));
-
-        assert!(state.niri.bind_repeat_timers.contains_key(&down));
-        assert!(state.niri.bind_repeat_timers.contains_key(&right));
-    }
 
     #[test]
     fn bindings_suppress_keys() {
