@@ -1,4 +1,4 @@
-use niri_config::{Action, Bind, Key, Modifiers, Trigger};
+use niri_config::{Action, Bind, BoundAction, Key, Modifiers, Trigger};
 use smithay::backend::input::Keycode;
 use smithay::input::keyboard::Keysym;
 
@@ -10,7 +10,7 @@ fn repeat_bind(keysym: Keysym, action: Action) -> Bind {
             trigger: Trigger::Keysym(keysym),
             modifiers: Modifiers::COMPOSITOR | Modifiers::SHIFT,
         },
-        action,
+        action: BoundAction::Press(action),
         repeat: true,
         cooldown: None,
         allow_when_locked: false,
