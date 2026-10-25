@@ -671,7 +671,7 @@ impl State {
             ShouldInterceptResult::ForwardAndHandle(bind)
             | ShouldInterceptResult::InterceptAndHandle(bind) => {
                 if pressed && bind.repeat {
-                    self.start_key_repeat(event.key_code(), bind);
+                    self.start_key_repeat(event.key_code(), bind.clone());
                 }
                 self.handle_bind(bind, pressed);
             }

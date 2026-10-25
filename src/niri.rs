@@ -6605,11 +6605,7 @@ impl Niri {
         self.pending_release_binds.clear();
         self.pending_mouse_release_binds.clear();
         self.pending_tablet_release_binds.clear();
-
-        // Stop ongoing key repeat if any.
-        if let Some(token) = self.bind_repeat_timer.take() {
-            self.event_loop.remove(token);
-        }
+        self.bind_repeat_timers.clear();
     }
 
     pub fn is_locked(&self) -> bool {
